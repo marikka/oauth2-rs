@@ -424,6 +424,7 @@
 use chrono::serde::ts_seconds_option;
 use chrono::{DateTime, Utc};
 use std::borrow::Cow;
+use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::Error as FormatterError;
 use std::fmt::{Debug, Display, Formatter};
@@ -1896,10 +1897,7 @@ fn endpoint_request<'a>(
 ) -> HttpRequest {
     let mut headers = HeaderMap::new();
     headers.append(ACCEPT, HeaderValue::from_static(CONTENT_TYPE_JSON));
-    headers.append(
-        CONTENT_TYPE,
-        HeaderValue::from_static(CONTENT_TYPE_FORMENCODED),
-    );
+    headers.append(CONTENT_TYPE, HeaderValue::from_static(CONTENT_TYPE_JSON));
 
     let scopes_opt = scopes.and_then(|scopes| {
         if !scopes.is_empty() {
@@ -1962,10 +1960,19 @@ fn endpoint_request<'a>(
             .as_slice(),
     );
 
+    /*
     let body = url::form_urlencoded::Serializer::new(String::new())
         .extend_pairs(params)
         .finish()
         .into_bytes();
+        */
+
+    //let foo: HashMap<&str, &str> = HashMap::from<&str,&str>(params.into());
+    let foo: HashMap<&str, &str> = params.into_iter().collect();
+
+    let serialized_string = serde_json::to_string(&foo).unwrap();
+    //dbg!(&serialized_string);
+    let body = serialized_string.into_bytes();
 
     HttpRequest {
         url: url.to_owned(),
